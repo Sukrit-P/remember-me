@@ -1,0 +1,45 @@
+CREATE TABLE test (
+	id int(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    name varchar(100) NOT NULL,
+    days int NOT NULL
+);
+
+INSERT INTO test(name, days) VALUES('ชื่อ', '30');
+
+// AND ,  OR
+SELECT * FROM test WHERE name= 'ชื่อ' AND days => '20' ORDER BY name; 
+// in หาค่าที่ตรง
+WHERE name IN ('ชื่อ', 'ชื่อเล่น');
+//between ระหว่าง
+WHERE days BETWEEN 20 AND 40;
+//Like search หาข้อมูลที่ตรงกัน  (m% ชื่อนำหน้าเป็นตัว m),%d
+WHERE name LIKE 'm%';
+
+//MAX , MIN , SUM
+SELECT MAX(days) FROM test;
+
+// SELECT in SELECT
+SELECT test, test2
+FROM test = (
+    SELECT MIN(days2) FROM test2
+);
+
+//join
+SELECT video_game.name, video_game.genre, game_developers.name, game_developers.country
+FROM video_game INNER JOIN game_developers
+ON video_game.id = game_developers.id;
+// AS ย่อ
+SELECT games.name, games.genre, dev.name, dev.country
+FROM games AS games INNER JOIN dev AS dev
+ON games.id = dev.id;
+
+//UPDATE
+UPDATE test SET name = 'ชื่อเล่น', days = '33' WHERE id = '1';
+
+//DELETE 
+DELETE FROM test WHERE id = '1';
+
+//reset table 
+TRUNCATE TABLE test;
+//delete table
+DROP TABLE test;

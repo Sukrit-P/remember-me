@@ -2,3 +2,10 @@ http://marcuscode.com/lang/javascript/arrays
 
 https://www.youtube.com/playlist?list=PLCCrrCO3m83i7ykK05b7KS-tN-2nZFVEc
 https://www.youtube.com/watch?v=mNrJDGfQGz0
+
+-------------------------------------------
+https://oms.chutima.com/login.php
+
+run docker
+config/apache2/000-default.conf  //DELETE SSL
+docker-compose

@@ -9,3 +9,95 @@ https://oms.chutima.com/login.php
 run docker
 config/apache2/000-default.conf  //DELETE SSL
 docker-compose
+
+
+
+
+-------------------------------------------------
+<?php
+date_default_timezone_set("Asia/Bangkok");
+
+$msg_text = "\n" . "รายงานการตรวจนับพัสดุ";
+$img =  $_POST['base64data'];
+$image_parts = explode(";base64,", $img);
+$image_type_aux = explode("image/", $image_parts[0]);
+$image_type = $image_type_aux[1];
+
+$image_base64 = base64_decode($image_parts[1]);
+$fileName =  date("ymd")  . '.jpg'; //. "_" . uniqid()
+$file_line = "img/line_notify/" . $fileName;
+$file = "../" . $file_line;
+file_put_contents($file, $image_base64);
+
+
+$access_token = 'JA7rmRxHewQJAPspjzZ1pdIrp5psl10ANJoTXab9Jzn'; // Token ของ User นั้นๆ 
+//WLDU4pT2cngECr0B7GYthP4GXF5emIp1BPvQjKyjbYh //Line แชมป์
+//JA7rmRxHewQJAPspjzZ1pdIrp5psl10ANJoTXab9Jzn //Line กลุ่ม OBL คุณอุ้ม
+// $send_message = "";
+$img_url = "https://oms.chutima.com/" . $file_line;
+
+$line_api = 'https://notify-api.line.me/api/notify';
+$message = $msg_text; //ส่งได้สูงสุด 1000 ตัวอักษร 
+$message_data = array( //ถ้าไม่มีรูป ส่งเฉพาะข้อความ
+    'message' => $message,
+    'imageThumbnail' => $img_url,
+    'imageFullsize' => $img_url
+);
+
+//  $CT_Line_Notify = new Chutim_LineNotify();
+$result = $CT_Line_Notify->sendMessage($line_api, $access_token, $message_data);
+
+
+$emp_id = $_SESSION['user_login_id'];
+// print_r($result);
+$date_now = date("Y-m-d");
+$data_overdue_2 = array();
+$data_overdue_2['table'] = "ct_orders";
+$data_overdue_2['attrib'] = "tracking_id,date_docket";
+$data_overdue_2['condition'] = "where status='2'  
+and tracking_id not in (SELECT tracking_id FROM ct_check_overdue where date(check_date)='$date_now'  )
+and date_docket <= (SELECT min(check_date) FROM ct_check_overdue where date(check_date)='$date_now'  )
+";
+$data_connn_overdue_2 = $CT_Fn->selectdb($data_overdue_2);
+while ($data_fetch_overdue_2 = $data_connn_overdue_2->fetch_assoc()) {
+    $tracking_overdue_2 = $data_fetch_overdue_2['tracking_id'];
+    $data_select_overdue = array();
+    $data_select_overdue['table'] = "ct_check_overdue";
+    $data_select_overdue['attrib'] = "check_id,tracking_id";
+    $data_select_overdue['condition'] = "where tracking_id='$tracking_overdue_2' 
+    AND date(check_date)=  '$date_now'"; //LIKE '%$this_day%'
+    $data_sql_overdue = $CT_Fn->selectdb($data_select_overdue);
+    if ($data_sql_overdue->num_rows <= 0) {
+        $start_pos = substr($tracking_overdue_2, 0, 2);
+        $data_chk['table'] = "sl_post";
+        $data_chk['attrib'] = "post_short_name";
+        $data_chk['condition'] = "where post_start_track like '%$start_pos%'  ";
+        $data_get_chk  = $CT_Fn->selectdb($data_chk);
+        $lid = $data_get_chk->fetch_assoc();
+        $post_short_name = $lid['post_short_name'];
+
+        $did = "OV" . date("ymd") . $post_short_name;
+        $data_select['table'] = "ct_check_overdue";
+        $data_select['attrib'] = "check_id";
+        $data_select['condition'] = "where substr(check_id,1,10)='$did' order by check_id desc limit 0,1";
+        $dbgetid  = $CT_Fn->selectdb($data_select);
+        if ($dbgetid->num_rows <= 0) $line = $did . "000001";
+        else {
+            $lid = $dbgetid->fetch_assoc();
+            $line = (substr($lid['check_id'], 10, 6)) + 1;
+            $line = $did . sprintf("%06d", $line);
+        }
+        $data_insert['table'] = "ct_check_overdue";
+        $data_insert['attrib'] = array(
+            "check_id" => "'$line'",
+            "check_date" => "NOW()",
+            "tracking_id" => "'$tracking_overdue_2'",
+            "emp_id" => "'$emp_id'",
+            "status" => "'2'"
+        );
+        $CT_Fn->insertdb($data_insert);
+        $response =  array("status" => 1, "text" => $tracking_overdue_2);
+        // echo $line;
+    }
+}
+------------------------------------

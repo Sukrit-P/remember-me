@@ -22,3 +22,11 @@ http://marcuscode.com/lang/javascript/sorting-arrays // เรียง Array
 
 
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort //จำเล่นๆ Sort(); มากไปน้อย
+
+// SQL ฝึกฝน
+SELECT sum(IF(shop_id=114607,1,0)) as shop_114607, 
+sum(IF(shop_id=62467035,1,0)) as shop_62467035, 
+sum(IF(shop_id=288879043,1,0)) as shop_28887904, 
+sum(IF(shop_id=648335978705135,1,0)) as shop_648335978705135, 
+sum(IF(shop_id='XRJ7512L',1,0)) as shop_XRJ7512L 
+FROM ct_orders WHERE DATE(order_receive) = DATE(DATE_ADD(NOW(), INTERVAL -1 DAY))

@@ -30,3 +30,520 @@ sum(IF(shop_id=288879043,1,0)) as shop_28887904,
 sum(IF(shop_id=648335978705135,1,0)) as shop_648335978705135, 
 sum(IF(shop_id='XRJ7512L',1,0)) as shop_XRJ7512L 
 FROM ct_orders WHERE DATE(order_receive) = DATE(DATE_ADD(NOW(), INTERVAL -1 DAY))
+
+sukrit_test_101 37-183
+sukrit_test_101_get_input
+
+/////////<style>
+    .input_frame{
+        margin-top: 25px;
+    }
+    .button_frame{
+        /* padding: 30px; */
+        margin-top: 20px;
+
+    }.button_search{
+        /* padding: 30px; */
+        margin-top: 20px;
+
+    }
+</style>
+<div class="container-fluid card">
+    <div class="row">
+        <div class="col-lg-12 btn-ctm-b" style="text-align:center;padding-right:0;padding-left:0;"><br>
+            <h1>สรุปยอดการขายแต่ละสินค้า</h1>
+        </div>
+    </div>
+    <div class="row table-bordered justify-content-md-center">
+        <div class="col col-lg-2"></div>
+        <div class="col-md-auto">
+            <div class="form-group input_frame">
+                <input name="brand" id="brand" class="form-control ctm-live-search txt_input" type="text" autocomplete="off" />
+                <input class="ctm-live-search-value txt_brand" id="txt_brand" type="hidden" />
+                <div class="ctm-live-search_box">
+                    <ul class="list-group">
+                        <?php
+                            $brand = $CT_Pr->getBrand();
+                            foreach ($brand as $bra) {
+                        ?>
+                            <li class="list-group-item live-search-item  " data-value="<?php echo $bra['brand_id']; ?>"><?php echo $bra['brandname_th'] . " " . $bra['brandname_en']; ?></li>
+                        <?php } ?>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col col-lg-2 button_frame">
+            <button id="btnGet" class=" btn btn btn_outline-ctm-e btn-lg button_clear">
+            <i class='fa fa-ban' aria-hidden='true'></i> ล้าง</button>
+        </div>
+    </div>
+
+    <div class="row table-bordered">
+        <div class="col">
+            <div class="col-lg-12" style="text-align:center;font-size:25pt;"><span class="err_search"></span></div>
+            <div class="show_body"></div> 
+        </div>
+    </div>
+       
+</div>  
+
+
+<?php
+    // $select_sell_all = "select sum(pro_num) FROM ct_order_group WHERE orders_status='4'AND product_id='P0733800015648' ";
+    // $query_sell_all = $CTM_Connect->query($select_sell_all); 
+    // $f_sell_all = $query_sell_all->fetch_assoc();
+    // $pro_sell_all = $f_sell_all['pro_num'];
+
+?>
+
+    <!-- <div class="row table-bordered">
+        <div class="col">
+            
+        </div>
+        <div class="col">
+            
+        </div>
+        <div class="col">
+            
+        </div>
+        <div class="col">
+
+        </div>
+    </div> -->
+
+    <!-- <br>
+        <div style="border-top: 2px solid #000;"></div>
+    <br> -->
+
+
+ <!-- <div style="margin-top:20%;" class="container card">
+    <div class="row">
+        <div class="col">
+            AAAA
+        </div>
+    </div>
+</div>  -->
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        
+        $(".txt_brand").change(function() {
+
+            $(".err_search").html('<font color=green> กรุณารอสักครู่ ค่ะ <i class="fa fa-spinner fa-pulse" style="font-size:30px;color:green"></i> ..</font>');
+            var show_body = $(".show_body");
+            var txt_brand = $(this).val();
+            var url = "module/test_files/sukrit_test_101_get_input.php";
+
+            $.post(url, {
+                txt_brand: txt_brand
+            }, function(data) {
+
+                show_body.html(data);
+                $(".err_search").html('');
+            });
+        });
+
+        $(".button_clear").click(function() { 
+            $(".show_body").html('');
+            $(".err_search").html('');
+            $(".txt_input").val(''); 
+
+        });
+
+    });
+</script>
+<script src="js/ctm.js"></script>
+
+
+
+<!--  ct_orders , ct_order_group , ct_odoo_product , sh_category-->
+
+<!-- 
+Go ct_odoo_product
+
+$product_id -> ct_order_group = $tracking_id where orders_status = '4' "สำเร็จ""
+$tracking_id -> ct_orders = SUM($PRO_NUM) where status = '4' "ส่งสำเร็จ"
+ -->
+
+
+
+////////////////////////////////////////..
+
+
+<?php
+require "../../include/config.web.php";
+$txt_brand = $_POST['txt_brand'];
+
+///////////////////////////////////////// /////////////////////////////////////////////////////////////////////////////////////////////
+if ($txt_brand != "") {
+    $where = " and template_id in (select template_id from ct_template where brand_id ='$txt_brand' )";
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+?>
+<style>
+    .table-td-a {
+        text-align: right;
+        font-size:18px;
+        width: 25%;
+    }
+    .table-td-b {
+        text-align: left; 
+        font-size:16px;
+        width: 35%;
+    }
+    .table-td-img{
+        width:20%;
+    }
+    /* .table-td-calculate{
+        width:auto;
+    } */
+</style>
+<div class="collapse_show">
+<?php 
+    $category_old = "";
+    $collapse_row = 1;
+    $select_odo = "select odid,product_id,category_id,template_id,img_url from ct_odoo_product where 1 and status_product=1 $where order by category_id desc";
+    $query_odo = $CTM_Connect->query($select_odo);
+    while ($f_odo = $query_odo->fetch_assoc()) {  
+        $category_id = $f_odo['category_id'];
+        $template_id = $f_odo['template_id'];
+        $img_url = $f_odo['img_url'];
+        $product_id = $f_odo['product_id'];
+        $odoo_id = $f_odo['odid'];
+
+        $select_tem = "select template_name,brand_id from ct_template where template_id = (select template_id from ct_odoo_product where product_id='$product_id') ";
+        $query_tem = $CTM_Connect->query($select_tem);
+        $f_tem = $query_tem->fetch_assoc();
+        $template_name = $f_tem['template_name'];
+        $brand_id = $f_tem['brand_id'];
+
+        $select_brand = "select brandname_th from ct_brand where brand_id='$brand_id'";
+        $query_brand = $CTM_Connect->query($select_brand);
+        $f_brand = $query_brand->fetch_assoc();
+        $brand_name = $f_brand['brandname_th'];
+
+        // $select_stock = "select sum(shelf_num) c_num from ct_shelf_product where product_id='$product_id' group by product_id";
+        // $query_stock = $CTM_Connect->query($select_stock);
+        // $f_stk = $query_stock->fetch_assoc();
+        // $stock = ($f_stk['c_num'] == "") ? 0 : $f_stk['c_num'];
+
+        $select_cost = "select price_cost,price_avg FROM  ct_purchase_order_detail where product_id='$product_id' order by purchase_order_detail_id desc limit 0,1 ";
+        $query_cost = $CTM_Connect->query($select_cost);
+        $f_cost = $query_cost->fetch_assoc();
+        $cost = ($f_cost['price_cost'] == "") ? 0 : $f_cost['price_cost'];
+
+        //---------------------------
+        // $select_sell_all = "select sum(pro_num) FROM ct_order_group WHERE orders_status='4'AND product_id='$product_id' ";
+        // $query_sell_all = $CTM_Connect->query($select_sell_all); 
+        // $f_sell_all = $query_sell_all->fetch_assoc();
+        // $pro_sell_all = $f_sell_all['sum(pro_num)'];
+        
+        // $dateSQL_month = "and MONTH(so_update)"
+
+        //-------------------------
+
+
+        $datasum = array();
+        $datasum['table'] = "ct_order_group";
+        $datasum['attrib'] = "so_update, pro_num , price";
+        $datasum['condition'] = "WHERE product_id= '$product_id' AND orders_status = 8  ";
+        $datasum_conn = $CT_Pr->selectdb($datasum);
+        // echo $datasum_conn = $CT_Pr->select($datasum);
+        // $datasum_fetch = $datasum_conn->fetch_assoc();
+        // echo $CT_Fn->print_r($datasum_fetch);
+
+        $cargo_sell_all = 0;
+        $cargo_sell_month_1 = 0;
+        $cargo_sell_month_3 = 0;
+        $cargo_sell_month_6 = 0;
+        $cargo_sell_year = 0;
+        
+        $check_cargo_all =[];
+        $cargo_all =[];
+        $cargo_all_NULL = 0;
+        $count_pro_all = 0;
+
+        $check_cargo_OneMonth =[];
+        $cargo_OneMonth =[];
+        $cargo_OneMonth_NULL = 0;
+        $count_pro_OneMonth = 0;
+
+        while($datasum_fetch = $datasum_conn->fetch_assoc()){     
+
+            $cargo_sumAll_sell = $datasum_fetch['pro_num']; 
+            $cargo_sell_all += $cargo_sumAll_sell;
+            
+            if(isset($datasum_fetch['price'])){
+
+                $val_sum_all = $datasum_fetch['price'] * $datasum_fetch['pro_num'];
+                array_push($cargo_all, $val_sum_all); 
+                
+                array_push($check_cargo_all, $datasum_fetch['price']); 
+
+                $count_pro_all += $datasum_fetch['pro_num'];
+            }else{
+                $cargo_all_NULL += $datasum_fetch['pro_num'];
+            }
+
+
+            if( strtotime($datasum_fetch['so_update']) > strtotime("-1 month") && isset($datasum_fetch['so_update']) ) {  
+                $cargo_sell_month_1 += $cargo_sumAll_sell;
+
+                if(isset($datasum_fetch['price'])){
+
+                    $val_sum_OneMonth = $datasum_fetch['price'] * $datasum_fetch['pro_num'];
+                    array_push($cargo_OneMonth, $val_sum_OneMonth); 
+                    
+                    array_push($check_cargo_OneMonth, $datasum_fetch['price']); 
+    
+                    $count_pro_OneMonth += $datasum_fetch['pro_num'];
+                }else{
+                    $cargo_OneMonth_NULL += $datasum_fetch['pro_num'];
+                }
+            }
+            if( strtotime($datasum_fetch['so_update']) > strtotime("-3 month") && isset($datasum_fetch['so_update']) ) {
+                $cargo_sell_month_3 += $cargo_sumAll_sell;
+            }
+            if( strtotime($datasum_fetch['so_update']) > strtotime("-6 month") && isset($datasum_fetch['so_update']) ) {
+                $cargo_sell_month_6 += $cargo_sumAll_sell;
+            }
+            if( strtotime($datasum_fetch['so_update']) > strtotime("-12 month") && isset($datasum_fetch['so_update']) ) {
+                $cargo_sell_year += $cargo_sumAll_sell;
+            }
+
+        }
+
+         //-------------------------
+        $cargo_sum_all_NULL = array_sum($cargo_all);
+        
+        $cargo_all_list = array_unique($check_cargo_all);
+        sort($cargo_all_list);
+
+        $cargo_sum_all_NULL_MIN = $cargo_sum_all_NULL + ($cargo_all_NULL * $cargo_all_list[0]);
+        $row_arr_all= count($cargo_all_list)-1;
+        $cargo_sum_all_NULL_MAX = $cargo_sum_all_NULL + ($cargo_all_NULL * $cargo_all_list[$row_arr_all]);
+        $cargo_sum_all_NULL_AVG = $cargo_sum_all_NULL + (( ($cargo_all_NULL * $cargo_all_list[0]) + ($cargo_all_NULL * $cargo_all_list[$row_arr_all]) ) / 2 );
+   
+        $price_cost_all_NULL = $cost * $count_pro_all;
+        $price_profit_all_NULL = $cargo_sum_all_NULL - $price_cost_all_NULL;
+
+        $price_cost_all = $price_cost_all_NULL + ($cargo_all_NULL * $cost);
+        $cargo_sum_all_MIN = $cargo_sum_all_NULL_MIN - $price_cost_all;
+        $cargo_sum_all_MAX = $cargo_sum_all_NULL_MAX - $price_cost_all;
+        $cargo_sum_all_AVG = (($cargo_sum_all_NULL_MIN + $cargo_sum_all_NULL_MAX)/2) - $price_cost_all;
+
+         //-------------------------
+        $cargo_sum_OneMonth_NULL = array_sum($cargo_OneMonth);
+        
+        $cargo_OneMonth_list = array_unique($check_cargo_OneMonth);
+        sort($cargo_OneMonth_list);
+
+        $cargo_sum_OneMonth_NULL_MIN = $cargo_sum_OneMonth_NULL + ($cargo_OneMonth_NULL * $cargo_OneMonth_list[0]);
+        $row_arr_OneMonth= count($cargo_OneMonth_list)-1;
+        $cargo_sum_OneMonth_NULL_MAX = $cargo_sum_OneMonth_NULL + ($cargo_OneMonth_NULL * $cargo_OneMonth_list[$row_arr_OneMonth]);
+        $cargo_sum_OneMonth_NULL_AVG = $cargo_sum_OneMonth_NULL + (( ($cargo_OneMonth_NULL * $cargo_OneMonth_list[0]) + ($cargo_OneMonth_NULL * $cargo_OneMonth_list[$row_arr_OneMonth]) ) / 2 );
+   
+        $price_cost_OneMonth_NULL = $cost * $count_pro_OneMonth;
+        $price_profit_OneMonth_NULL = $cargo_sum_OneMonth_NULL - $price_cost_OneMonth_NULL;
+
+        $price_cost_OneMonth = $price_cost_OneMonth_NULL + ($cargo_OneMonth_NULL * $cost);
+        $cargo_sum_OneMonth_MIN = $cargo_sum_OneMonth_NULL_MIN - $price_cost_OneMonth;
+        $cargo_sum_OneMonth_MAX = $cargo_sum_OneMonth_NULL_MAX - $price_cost_OneMonth;
+        $cargo_sum_OneMonth_AVG = (($cargo_sum_OneMonth_NULL_MIN + $cargo_sum_OneMonth_NULL_MAX)/2) - $price_cost_OneMonth;
+
+
+// min max avg
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Close div Back side codeing
+        if ($category_old != $category_id && $category_old != "") { ?>
+                        </div>
+                    </div>
+                </div>
+<?php   } 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        if ($category_old != $category_id) {         
+            $cat_parent = $CT_Pr->getParentCategory($category_id);   
+            //print_r(array_values($cat_parent)); 
+?>
+        <div class="card">    <!-- https://getbootstrap.com/docs/4.3/components/collapse/ -->
+            <div class="card-header" id="heading_collapse_<?php echo $collapse_row; ?>"> 
+                <button class="btn btn-link" data-toggle="collapse" data-target=".show_collapse_<?php echo $collapse_row; ?>"  aria-controls="collapse_<?php echo $collapse_row; ?>" >
+                    <?php
+                        if ($category_id == "") {
+                            echo "ยังไม่ได้จัดหมวดหมู่สินค้า";
+                        } else {
+                            for ($i = (count($cat_parent) - 1); $i >= 0; $i--) {       
+                                echo $cat_parent[$i]['category_name'];
+                                if ($i != 0) echo " > ";                    
+                            }
+                        }
+                    ?>
+                </button>
+            </div> 
+            <div class="collapse show_collapse_<?php echo $collapse_row; ?>" aria-labelledby="heading_collapse_<?php echo $collapse_row; ?>" data-parent=".collapse_show">
+                <div class="card-body">
+    <?php 
+        $collapse_row++;
+        } 
+    ?>
+    <!-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------- -->
+    <div class="color-ctm-bottom-a">
+            <table class="table table-bordered" style="background-color:#FFFFFF;margin-bottom: 1px;">
+                <tbody>
+                    <tr>
+                        <td class="table-td-a" >OODO ID :</td>
+                        <td class="table-td-b" ><span id='product_id'></span><?php echo $odoo_id; ?></td> 
+                        <td class="table-td-img" rowspan='5' colspan='3' >
+                            <img class="rounded mx-auto d-block img-thumbnail photo_product" src="<?php echo ($img_url == "" ? "img/nophoto.png" : $img_url); ?>" width='300' higth='300' />
+                        </td>
+                    </tr>
+                    <tr><td class="table-td-a" >Product ID :</td>
+                        <td class="table-td-b" ><span id='product_id'><?php echo $product_id; ?></span></td>
+                                           
+                    </tr>
+                    <tr>
+                        <td class="table-td-a" >แบรนด์ :</td>
+                        <td class="table-td-b" ><span id='product_id'><?php echo $brand_name; ?></span></td>                    
+                    </tr>
+                    <tr>
+                        <td class="table-td-a" >ชื่อสินค้า :</td>
+                        <td class="table-td-b" ><span id='product_id'><?php echo $template_name; ?></span></td>                    
+                    </tr>
+                    <tr>
+                        <td class="table-td-a" >รายละเอียด :</td>
+                        <td class="table-td-b" >
+                            <span id='product_id'>
+                            <?php
+                                $select_var = "select option_template_id,variation_name from ct_product_variations where product_id='$product_id'";
+                                $query_var = $CTM_Connect->query($select_var);
+                                while ($f_var = $query_var->fetch_assoc()) {
+                                    $option_template_id = $f_var['option_template_id'];
+                                    $variation_name = $f_var['variation_name'];
+
+                                    $select_option = "select op.option_name from ct_option op,ct_option_template ot where op.option_id=ot.option_id and ot.option_template_id='$option_template_id'";
+                                    $query_option = $CTM_Connect->query($select_option);
+                                    $f_oti =  $query_option->fetch_assoc();
+                                    $op_name = $f_oti['option_name'];
+                                    echo $op_name . " : " . $variation_name;
+                                    echo "<br>";
+                                }
+                                echo "<br>ราคาต้นทุน ".number_format($cost,2);
+                            ?>
+                            </span>
+                        </td> 
+                    </tr>                 
+                </tbody>
+            </table>
+            <table class="table table-bordered" style="background-color:#FFFFFF;">
+            <tbody>
+                <!-- <tr>
+                    <td >จำนวนสินค้าที่ถูกขายภายใน 1 เดือน ที่ผ่านมา : <?php echo $cargo_sell_month_1; ?></td>                    
+                    <td >จำนวนสินค้าที่ถูกขายภายใน 3 เดือน ที่ผ่านมา : <?php echo $cargo_sell_month_3; ?></td>                    
+                    <td >จำนวนสินค้าที่ถูกขายภายใน 6 เดือน ที่ผ่านมา : <?php echo $cargo_sell_month_6; ?></td>                    
+                    <td >จำนวนสินค้าที่ถูกขายภายใน 1 ปี ที่ผ่านมา : <?php echo $cargo_sell_year; ?></td>                    
+                    <td >จำนวนสินค้าที่ถูกขายทั้งหมด : <?php echo $cargo_sell_all; ?></td>                    
+                </tr> -->
+                <tr>
+                    <td >จำนวนสินค้าที่ถูกขายทั้งหมด : <?php echo $cargo_sell_all; ?></td>                    
+                    <td> จำนวนสินค้าที่ไม่ทราบราคา : <?php echo $cargo_all_NULL;?></td>    
+                    <td>ราคาทั้งหมดที่ขายได้ (ไม่คิดสินค้าไม่ทราบราคา) : <?php echo number_format($cargo_sum_all_NULL,2); ?></td>
+                    <td>ประมาณราคาสินค้าทั้งหมด <br>
+                            MIN: <?php echo number_format($cargo_sum_all_NULL_MIN,2); ?>  <br>
+                            MAX: <?php echo number_format($cargo_sum_all_NULL_MAX,2); ?>  <br>
+                            AVG: <?php echo number_format($cargo_sum_all_NULL_AVG,2); ?>  
+                    </td>
+                    <td>ตุ้นทุน / กำไร (ไม่คิดสินค้าไม่ทราบราคา)  <br>
+                        ต้นทุน: <?php echo number_format($price_cost_all_NULL,2); ?> <br>
+                        กำไร: <?php echo number_format($price_profit_all_NULL,2); ?>
+                    </td>
+                    <td>ประมาณราคา ต้นทุน / กำไร  <br>
+                        ต้นทุน: <?php echo number_format($price_cost_all,2); ?> <br>
+                        กำไร-MIN: <?php echo number_format($cargo_sum_all_MIN,2); ?> <br>
+                        กำไร-MAX: <?php echo number_format($cargo_sum_all_MAX,2); ?> <br>
+                        กำไร-AVG: <?php echo number_format($cargo_sum_all_AVG,2); ?> <br>
+                    </td>
+
+
+                    <!-- <?php echo '<pre>'; print_r($cargo_all_list); echo '</pre>';?>                 -->
+                    <?php echo '<pre>'; print_r($cargo_OneMonth); echo '</pre>';?>                
+                </tr>
+                <tr>
+                    <td >จำนวนสินค้าที่ถูกขายภายใน 1 เดือน ที่ผ่านมา : <?php echo $cargo_sell_month_1; ?></td>                    
+                    <td> จำนวนสินค้าที่ไม่ทราบราคา : <?php echo $cargo_OneMonth_NULL;?></td>    
+                    <td>ราคาทั้งหมดที่ขายได้ (ไม่คิดสินค้าไม่ทราบราคา) : <?php echo number_format($cargo_sum_OneMonth_NULL,2); ?></td>
+                    <td>ประมาณราคาสินค้าทั้งหมด <br>
+                            MIN: <?php echo number_format($cargo_sum_OneMonth_NULL_MIN,2); ?>  <br>
+                            MAX: <?php echo number_format($cargo_sum_OneMonth_NULL_MAX,2); ?>  <br>
+                            AVG: <?php echo number_format($cargo_sum_OneMonth_NULL_AVG,2); ?>  
+                    </td>
+                    <td>ตุ้นทุน / กำไร (ไม่คิดสินค้าไม่ทราบราคา)  <br>
+                        ต้นทุน: <?php echo number_format($price_cost_OneMonth_NULL,2); ?> <br>
+                        กำไร: <?php echo number_format($price_profit_OneMonth_NULL,2); ?>
+                    </td>
+                    <td>ประมาณราคา ต้นทุน / กำไร  <br>
+                        ต้นทุน: <?php echo number_format($price_cost_OneMonth,2); ?> <br>
+                        กำไร-MIN: <?php echo number_format($cargo_sum_OneMonth_MIN,2); ?> <br>
+                        กำไร-MAX: <?php echo number_format($cargo_sum_OneMonth_MAX,2); ?> <br>
+                        กำไร-AVG: <?php echo number_format($cargo_sum_OneMonth_AVG,2); ?> <br>
+                    </td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+
+
+
+    <!-- --------------------------------------------------------------------------------------------------------------------------------------------------------------------- -->
+
+    <?php 
+        $category_old =  $category_id;
+    }
+    ?>
+
+</div>
+
+
+
+    
+
+
+
+
+<!-- <div class="collapse_show">
+
+    <div class="card">
+        <div class="card-header" id="heading_collapse_1">
+            <button class="btn btn-link" data-toggle="collapse" data-target=".show_collapse_1"  aria-controls="collapse_1" >
+                Collapsible Group Item #1
+            </button>            
+        </div>
+
+        <div class="collapse show_collapse_1" aria-labelledby="heading_collapse_1" data-parent=".collapse_show">
+            <div class="card-body">
+                fgfdgdgffdg
+            </div>
+        </div>
+    </div>
+
+</div> -->
+
+
+<?php 
+require "../../include/unset.web.php";
+?>
+<script type="text/javascript">
+    $(document).ready(function() {
+       
+
+
+      
+
+    });
+</script>
+
+
+/////////////*********
